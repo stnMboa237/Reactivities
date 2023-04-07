@@ -1,0 +1,683 @@
+/************************************************************************************/
+--install dotnet 7 SDK, node JS 18.12.1 LTS
+--install from NUGET packet manager: Microsoft.EntityFrameworkCore.Sqlite
+-- Install from dotnet cli: dotnet tool install --global dotnet-ef --version 7.0.1
+
+
+-- install node version management (nvm): it allows to swicht from npm version to another
+link: https://joachim8675309.medium.com/installing-node-js-with-nvm-4dc469c977d9
+      https://chocolatey.org/install
+    Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+    choco install cmder
+    choco install nvm
+    refreshenv
+
+/************************************************************************************/
+before start, we must know how to choose the correct .net version we want to use for our project.
+In order to change the dotnet version, we must do:
+
+You can do this with a global.json file in the root of your project:
+
+Verify the list of SDKs on your machine:
+    dotnet --list-sdks
+You'll see a list like this.
+
+2.1.100 [C:\Program Files\dotnet\sdk]
+2.1.101 [C:\Program Files\dotnet\sdk]
+2.1.103 [C:\Program Files\dotnet\sdk]
+2.1.104 [C:\Program Files\dotnet\sdk]
+[...lines omitted...]
+2.1.601 [C:\Program Files\dotnet\sdk]
+2.2.101 [C:\Program Files\dotnet\sdk]
+3.0.100-preview3-010431 [C:\Program Files\dotnet\sdk]
+Create a folder to be the root of your project, where you are going to run dotnet new.
+In that folder, run this command: dotnet new globaljson
+The result will look something like this:
+
+{
+  "sdk": {
+    "version": "3.0.100-preview3-010431"
+  }
+}
+In version, replace the 3.0.100-preview3-010431 with the version you prefer from the --list-sdks list. For example:
+{
+  "sdk": {
+    "version": "2.2.101"
+  }
+}
+Run dotnet --version to verify. You should see:
+2.2.101
+
+
+/************************************************************************************/
+commands to create the project from git cli:
+
+    mkdir Reactivities
+    cd Reactivities
+    dotnet new sln              #(this creates Reactivities.sln file)
+    dotnet new webapi -n API    #(this creates a new webapi project folder named API and files)
+    dotnet new classlib -n Application
+    dotnet new classlib -n Domain
+    dotnet new classlib -n Persistence 
+
+    dotnet sln add API/API.csproj
+    dotnet sln add Application
+    dotnet sln add Domain
+    dotnet sln add Persistence
+
+    cd API 
+    dotnet add reference ../Application
+    cd ..; cd Application
+    dotnet add reference ../Domain
+    dotnet add reference ../Persistence
+
+    cd ..; cd Persistence
+    dotnet add reference ../Domain
+
+    dotnet run
+    dotnet watch run
+
+  
+  /************************************************************************************/
+  Install MicrosoftEntityFrameworkCore.sqlite v5.01 into the Persistence class library project 
+  (same SDK version as API, Domain, Persistence projects) via NUGET gallery
+
+MAKE SURE TO RUN THE APP ALMOST ONE TIME AFTER MicrosoftEntityFrameworkCore install
+    dotnet run
+    dotnet watch run
+
+STOP the Application using Ctrl+C
+Then, in order to create the DB, we will create a migration using ef
+cd Reactivities
+INSTALL DOTNET EF
+    dotnet tool install --global dotnet-ef --version 5.0.1
+    dotnet tool list --global
+    dotnet ef -h
+    dotnet ef migrations add InitialCreates -p Persistence -s API/ #this command creates a migration.
+to do this, run: dotnet ef migrations add MigrationName -p dbProjectName -s StartupProjectName/
+
+  /************************************************************************************/
+  HOW TO RUN OUR PROJECT:
+  To build and run our .net project, just run this command from the CLI:
+    dotnet watch --no-hot-reload
+  this will reload the app after every file update
+
+  /************************************************************************************/
+  HOW TO CREATE THE GIT REPO + GITIGNORE FILE
+  in order to list all availables commands for dotnet cli, just type: 
+    dotnet new -l
+
+  in order to create a new GIT repo for our project, just type from the CLI:
+    git status #this will tell us that our current folder is not a GIT repository. 
+    git init #this will initiate a GIT repo for our project
+  
+  in order to upload into our new repo only "imports" files of our project, we can create a gitIgnore file for a dotnet project:
+    dotnet new gitignore
+
+  /************************************************************************************/
+  HOW TO CREATE THE CLIENT APP?
+  To create the client app using REACT, we need to run the following cmd:
+    npx create-react-app client-app --use-npm --template typescript
+    npx create-react-app <app-name> --use-npm --template typescript
+
+  PS: en cas de soucis, je dois me souvenir que les versions de node (node -v) et de NPM (npm -v )
+  sont différentes de celles use dans le tuto.
+
+  En cas de soucis plus en avant, il faudrait installer les mêmes versions que dans le tuto á savoir:
+    node version 16.16.0
+    npm  version 8.11.0 
+  et switcher sur ces dernières!!!
+
+  Remember to install chrome extension REACT DEVELOPPER TOOLS 
+  install AXIOS for fetching/retrieving data from our API. An alternative is FETCH
+  To install AXIOS,run the following cmd:
+    npm install axios
+  
+  install semantic-ui: npm install semantic-ui-react semantic-ui-css
+  /************************************************************************************/
+  HOW TO IMPLEMENT CQRS PATTERN?  
+  In order to communicate between different level of our app, we need a mediator.
+  We must install for 'Application' Project MediatR.Extensions.Microsoft.DependencyInjection v.11.0.0 by Jimmy Bogard from NugetGallery
+ 
+  Install Automapper AutoMapper.Extensions.Microsoft.DependencyInjection v.12.0.0 by Jimmy Bogard into our 'Application' project
+
+  /************************************************************************************/
+  FRONT END: How to generate GUID from the front:
+  to do this, we must install this package into the root folder of client App
+    npm install uuid
+    npm i --save-dev @types/uuid
+  
+  /************************************************************************************/
+  HOW TO MANAGE THE STATE OF REACT?
+  In order to manage the state, we can use MobX or 'MobX React Lite'. Une alternative serait de use react Redux
+  Each component could communicate with the state via The 'React Context'.
+
+  MobX uses classes to store the state. we create classes for each store we create. To change the value of a property
+  which is an 'observable', we need action.
+    Why MobeX?
+    - It's written into TypeScript. So it is a good approach for our project
+    - It's use Observables(c'est le futur des 'promises' en javascript. contrairemement aux promises qui sont ponctuelles 
+      sans suivies, il est possible de suivre les eventuelles changement d'etat de nos variables 'OBSERVABLES')
+    - It's use action. (actions change the state of Observables)
+    - Computed properties
+    - Reactions
+    - Autorun
+  Reaction is a benefit of use of MobX. A reaction is an action to do when the state of the property changes.
+
+  example:
+
+  import { reaction, makeAutoObservable, action, computed, makeOservable, observable} from 'mobx'
+  import {createContext} from "react"
+
+  class DemoStore{
+    firstName = 'Bob',
+    lastName = 'Smith'
+  }
+
+  Constructor(){
+    
+    /*this, {
+      firstName: observable,
+      lastName: observable,
+      setFirstName: action,
+      fullName: computedmakeOservable(t
+    })*/
+    makeAutoObservable(this);
+    
+    /*reaction: on doit preciser dans une reaction le param qu'on veut 'observer' ainsi que la 
+    fonction/reaction a faire quand ce param observer change d'etat ou de valeur
+    */
+    reaction(
+      () => this.firstName,  /*observabele param*/
+      (firstName) => console.log(firstName) /*action to do: log into the console firstName everytime it value change's*/
+    )
+  }
+
+  /*action*/
+  setFirstName = (name: string) => {
+    this.firstName = name;
+  }
+
+  /*computed property: it allows us to get a new Property from our store properties*/
+  get fullName = () => {
+    return this.firstName + ' ' + this.lastName;
+  }
+
+  export default createContext(new DemoStore());
+
+  -----
+
+  import React, {useContext} from 'react';
+  import DemoStore from '../app/demoStore';
+
+  export default function Demo(){
+    const demoStore = useContext(DemoStore);
+    const {fullName} = demoStore;
+
+    return (
+      <div>
+        <h1>Hello {fullName}<h1/>
+      <div/>
+    )
+  }
+  -----
+  
+  /************************************************************************************/
+  HOW TO INSTALL MobX and 'MobX React Lite'
+  Just run the following cmd:
+    npm install mobx mobx-react-lite
+
+  /************************************************************************************/
+  HOW TO ROUTE REACT APPS?
+    <BrowserRouter> we will surround our app with a <BrowserRouter> component inside our app, 
+      we will use <Route> component which will load the particular component called during the navigation inside the app
+    <Link> we urround a button with a <Link> component for example
+    <NavLink> we use <NavLink> to make a button unactive when a link is click on it
+    <Redirect> is an option to redirect the user
+
+  React Router hook
+    useHistory.goBack(), go(), goForward(), location(), match()... : keeps track of current location/re-renders the componentwhen
+       change detected
+    useLocation
+    useParams
+    useRouteMatch
+  
+  HOW TO  INSTALL REACT ROUTER?
+    npm install react-router-dom
+  
+  /************************************************************************************/
+  HOW TO SELECT DATE?
+  In to display and select a particular date (start date of an activity for example), we need to install react-calendar package:
+    npm install react-calendar
+
+  /************************************************************************************/
+  HOW TO MANAGE VALIDATION FROM THE BACK?
+  To manage validation, we can do it directly from the Model. But this is not what we want.
+  In order to improve the app, we validate our data into the Application Project. Doing that, 
+  our objects are validated before any elaboration and before sending/retrieving them from the DB.
+  WE GAIN IN EFFICIENCY.
+
+  We need to install from NugetGallery FluentValidation.AspNetCore into application project(v.11.2.2)
+  checkOut the doc: https://docs.fluentvalidation.net/en/latest/aspnet.html
+
+  for this course, we use autoValidation
+
+  /************************************************************************************/
+  HOW TO MANAGE ERROR ?
+  To manange error inside our app, we create a Middleware class (ExceptionMiddleware) which is Injected
+  into the app after the app is builded.
+
+  Then, we added a controller for testing purpose and a NavLink(/Errors) from the from.
+
+  Now, in order to notify the end user of what is happening into the app, we need to install a notification 
+  package:
+    npm install react-toastify
+  
+  /************************************************************************************/
+  HOW TO DROP DB using Entity Framweork CLI
+  go to the solution level into your project. Open the CLI at the solution level and run the cmd:
+    dotnet ef database drop -s API -p Persistence
+  
+  /************************************************************************************/
+  HOW TO MANAGE FORMS for data handling from the frontEnd?
+    - We will use FORMIK which is one of the most popular library for react forms
+      npm install formik
+    - to validate inputs from the form, we will use Formik/Yup 
+      npm install yup
+      npm install @types/yup --save-dev
+    - to manage Date in the frontEnd, we will use ReactDatePicker/TimePicker package
+      npm install react-datepicker
+
+  /************************************************************************************/
+  HOW TO MANAGE AUTHENTICATION INTO THE APP?
+  Now, it's good idea to use JWT (Json Web Token) for apps based on API. 
+  Beside JWT, we will use ASP.NET Core Identity which has the following functionalities:
+    - MemberShip System
+    - Supports login stored in Identity (logins will be stored into the DB)
+    - Supports external providers (connect throught facebook for example)
+    - Comes with defautl user stores (it's create some defaults table into the DB)
+    - UserManager: maange user (create, find, get a user)
+    - SignInManager: get the user pwd as a string, and then compare it to the hashed pwd stored into the DB
+
+  To do this, we must install:
+      Microsoft.AspNetCore.Identity.EntityFrameworkCore by Microsoft version 5.0.1 from NugetGallery forthe library: Domain
+    then we create an EntityFrameworkCore migration: 
+      dotnet ef migrations add IdentityAdded -p Persistence -s API
+    from the solution reactivities.sln Level. the migration will create tables:
+      - AspNetRoles
+      - AspNetUsers
+      - AspNetRoleClaims
+      - AspNetUserClaims
+      - AspNetUserLogins
+      - AspNetUserRoles
+      - AspNetUserTokens
+      - AspNetUserRoles
+
+  to Manage JWT token (SymmetricSecurityKey), we must install: 
+    System.IdentityModel.Tokens.Jwt by Microsoft v.6.25.0 from NugetGallery into the API project
+
+  il existe plusieurs facons de creer des services dans Program.cs etc... pour une app.
+    
+    - service.AddScoped<NomDuService>(); ==> cree un service á chaque requete http(s)
+      par exple: services.AddScoped<TokenService>(); cree un token lorsqu'une requete http de login sera lancée
+    
+    -services.AddTransient<NomDeLaMethode/NomDeLaClass>(); ==> cree un service pour une methode/class
+    
+    -services.AddSingleton<NomDeLaMethode>(); ==> cree un service qd l'app demarre. Le sercice ainsi cree est maintenu
+      en vie jusqu'a l'arret de l'appli
+
+  Install Microsoft.AspNetCore.Authentication.JwtBearer by Microsoft version 7.0.0 from NugetGallery into the API project
+
+  /************************************************************************************/
+  Configure RELATION MANY TO MANY between Activity and AppUser
+  Run the migration from the Reactivities root folder:
+    dotnet ef migrations add ActvityAttendee -p Persistence -s API
+
+  /************************************************************************************/
+  HOW TO ACCESS TO USER/TOKEN INFOS INTO THE APPLICATION PROJECT?
+  To do this clearly, we can create a Service (in this case a new ClassLibrary project called Infrastructure) which
+  will infos on the user and token to "Application" Project.
+  
+  the into the "Application" project, we need to create an Interface
+
+  cd Reactivities
+  dotnet new classlib -n Infrastructure
+  dotnet sln add Infrastructure
+  cd Infrastructure/
+  dotnet add reference ../Application
+  cd ..
+  cd API/
+  dotnet add reference ../Infrastructure
+
+  /************************************************************************************/
+  HOW TO DROP DB TO IMPORT NEW SEED (MOCK) DATA, RUN THE following CMD FROM THE ROOT FOLDER (Reactivities)
+    dotnet ef database drop -p Persistence -s API
+    cd API
+    dotnet watch run 
+
+  /************************************************************************************/
+  SECTION 1: IMAGE STORAGE
+    - where can we store image into our application?
+    - which options do we have: 
+      * Database: store image/files into the DB presents some inconvenients like:
+        . inefficiency
+        . we must store files as BLOBs
+        . disk space could be an issue
+        . Authentication is easy
+
+      * File System: it's a good place to store files but...
+        . disk space could be an issue
+        . file permissions (read/write)
+        . recovery issue if the storage is KO
+
+      * Cloud Service: definitievely the better but expensive solution to store file used by an application
+        . cloud is higly scalable
+        . but infortunatelly, it could be more expensive depending on the size of our files
+        . it's secured with API key
+
+    - add a photo upload service 
+    - How to use a cloud service (Cloudinary API) specialized in image storage into the cloud
+      to add Cloudinary into our Infrastructure project, just open NugetGallery and find:
+      CloudinaryDotNet by Cloudinary v.1.14.0 and then install it into Infrastructure project
+
+      then get info from our cloudinay account and assign these info (cloudName, APIKey, APISecrete) into 
+      the config file (appsettings.json) of the Application
+
+      after created the Photo Class, run the following EF migration in order to create the table
+        cd ..; dotnet ef migrations add PhotoEntityAdded -p Persistence -s API 
+      
+  /************************************************************************************/
+  SECTION 17: Image Upload from the front
+  In order to upload image from the front, we can use drag&drop functionality. TO do this, we could
+  use the package: react-dropzone
+      npm install --save react-dropzone
+  
+  https://github.com/react-dropzone/react-dropzone
+
+  install react-cropper: it allows us to resize/crop an image
+      npm install --save react-cropper
+
+  /************************************************************************************/
+  SECTION 19: signalR
+  What is SignalR:
+    Adds real time web functionality to apps
+    it allows connected clients to receive content instantly (when the server update some data, the client will receive these update instantly)
+    it is ideal for:
+      - chat apps
+      - dashboard
+      - Monitoring
+    it has to possibility to use 3 differents types of transport:
+      - WebSockets : (meilleure option) connexion bidirectionnelle entre le srv et le client (á condition que les 2 supportent le webSocket)
+      - Server-sent events: (au cas oú le webSocket ne serait pas pris en charge par le srv/client ou les 2, alors, une alternative de transport
+         de l'info est : server-event/eventSource supporté par la plus part des browser á l'exception d'Internet Explorer avant la v10)
+      - Long polling (pire des solutions car il cree des latences quand la connexion reprend): crée un connexion Persistante ouverte 
+        entre le client et le srv jusquá ce que le server reponde.
+
+    SignalR use a HUB to provide us 2 types of objects to manage the connection between the server and the client
+      - Context: it's an object which provides ConnectionId, UserIdentifier, User, GetHttpContext() .... 
+      - clients: (AllExcept, client, Group (group of client connected to), Caller (to user who sent the request to the server), Others (every body except the caller)...)
+
+    en resumé, le HUB permet de:
+      - Allows connected clients to call methods on server
+      - can send notification to connected clients
+    
+    create a migration for the new Comment table: 
+      dotnet ef  migrations add CommentEntityAdded -p Persistence/ -s API
+
+    How to install signalr for the client papp?
+      npm install @microsoft/signalr
+
+  /************************************************************************************/
+  HOW TO CREATE UML ?
+
+  you can use https://vertabelo.com/ in order to create a UML diagram: you can generate a SQL script from 
+  a Entity framework migration, then create aphysical model of data
+
+  how to create a sql script using EF?
+  from the root folder just run the cmd:
+
+  dotnet ef migrations script -o migrationScriptTest.sql -p Persistence -s API
+  
+  /************************************************************************************/
+  HOW TO MANAGE PAGING, SORTING ?
+
+  in this section, we will do:
+    - paging on the APi and Client. Actuellement, l'API retourne la list des item quand on fait 
+    un get. Si l'application a peut de données, on est bon. Mais si le nbre de données et de requetes
+    vers l'api augmentent, alors, il est bon de faire une pagination
+    - Sorting on the API/Client
+    - Filtering on the API/Client
+
+    PAGING, SORTING, FILTERING sont des méthodes qu'on peut implementer dans des IQueryable<T>.
+    Nous allons stocker nos requetes dans des IQueryable<T> jusqu'au moment de les utiliser
+
+    What is IQueryable<T>?
+      - query variable stores query commands (query commands can be thinks like orderBy, Where etc...)
+      - using IQueryable<T>, we will creates an expression tree. 
+        
+        * the execution of the expression will be deferred until iteration (ForEach loop, ToList(), 
+          ToArray(), ToDictionary(): sont les expressions qui declenchent l'execution de la query dans la DB).
+
+        * Singleton queries (count, average etc...) will cause our queries to be executed inside the DB
+
+  exple:
+    var queryable = _context.Activities
+      .Where(x => x.Date >= request.StartDate)
+      .OrderBy (x => x.Date)
+      .AsQueryable(); // queryable est notre requete proprement dite
+
+    var activities = await queryable.Skip (request.Offset ?? 0)
+      .Take(request.Limit ?? 3) // SKIP et TAKE sont des operateurs de pagination
+      .ToListAsync(); //toList execute reellement la requete
+
+    Pour le front, nous allons gerer la pagination á la facon de twitter avec le LA PAGINATION VERTICALE.
+    Il s'agit en quelques sorte du vertical scrolling "infini". Pour cela, on doit installer la package:
+      npm install react-infinite-scroller
+      npm install @types/react-infinite-scroller
+
+  /************************************************************************************/
+  Comment éviter que le lors de l'ouverture d'un component ou d'une page, il faille stroller vers le haut?
+  Pour cela, il suffit de rajouter Le composant <ScrollRestoration /> dans le composant racine App.tsx
+
+  /************************************************************************************/
+  To create a production build of our app, just go to the link https://create-react-app.dev/docs/production-build
+  and follow the instructions. We can specify the path where the build result will be store by adding BUILD_PATH=ourPath
+  into the package.json/scripts/build
+  Exple: "build": "set BUILD_PATH='../API/wwwroot'&& react-scripts build",
+
+  run 
+    npm run build
+    
+  /************************************************************************************/
+  How to DOCKER-ize the app?
+  - we can use PostGresSQL directly fromt Docker installation
+    https://www.docker.com/products/docker-desktop/
+  
+
+  Enable Hyper V from Powershell (opened as Admin and run the command)
+     dism.exe /Online /Enable-Feature:Microsoft-Hyper-V /All
+     bcdedit /set hypervisorlaunchtype auto
+
+    after installed docker, you can run an instance of postGres using the following command:
+      docker run --name dev -e POSTGRES_USER=admin -e POSTGRES_PASSWORD=secret -p 5432:5432 -d postgres:latest
+
+  In order to remove Sqlite and use Postgres in Production mode, we must:
+    - delete Migrations Folder from Persistence project
+    - run the following cmd: 
+      dotnet ef database drop -p Persistence -s API
+    - check DB providers config from 
+      https://learn.microsoft.com/en-us/ef/core/providers/?tabs=dotnet-core-cli
+    - Install "Npgsql.EntityFrameworkCore.PostgreSQL by Shay Rojansky,Austin Drenski,Yoh Deadfall" from NugetGallery
+    the version to install MUST be the same as the EntityFrameworkCore and Dotnet Version. In our case, it's 7
+    then install this package for the Persistence project.
+    - create a new MIgration: 
+      dotnet ef migrations add PostgresInitial -p Persistence/ -s API/
+
+    - To deploy our app, we can use Heroku (no longer free).
+    An alternative is Fly.io (https://fly.io/).
+
+    In order to deploy our app on fly.io, we will create a DOCKER IMAGE of our app and then deploy the created image
+    on fly.io server
+      https://fly.io/docs/languages-and-frameworks/dockerfile/
+
+      in order to create the app image and store it into a public repo, we must created an account on hub.docker
+
+    - install docker (from microsoft) extension for vsCode
+    - at the root folder, create "Dockerfile"
+    Dockerfile content is:
+
+      #this cmd specify the image from which we want to start from. 
+      #It's the base image. We MUST SPECIFY THE SDK VERSION OF THE APP
+      #build-env: represents the stage: everytime we create an image, we start from a place so, we don't need to repeat
+      #some task each time we create the app new image
+      FROM mcr.microsoft.com/dotnet/sdk:7.0 as build-env
+      
+      #WORKDIR: is the file location into Docker container
+      WORKDIR /app
+
+      #copy .csproj and store as distinct layers
+      #this cmd will copy <E:\projects\dotnetcore7react18\Reactivities\Reactivities.sln> into the /app(docker container) folder
+      COPY "Reactivities.sln" "Reactivities.sln" 
+      COPY "API/API.csproj" "API/API.csproj"
+      COPY "Application/Application.csproj" "Application/Application.csproj"
+      COPY "Persistence/Persistence.csproj" "Persistence/Persistence.csproj"
+      COPY "Domain/Domain.csproj" "Domain/Domain.csproj"
+      COPY "Infrastructure/Infrastructure.csproj" "Infrastructure/Infrastructure.csproj"
+
+      #restore command will run, build and download all packages which are necessaries for the app.
+      RUN dotnet restore "Reactivities.sln"
+
+      #copy everything from source to destination (app folder) else and build. 
+      COPY . .
+      WORKDIR /app /*after the copy, we must specify the WORKDIR*/
+      #Now we build the app from dotnet using a config (-c <=> configuration; -o = output directory)
+      RUN dotnet publish -c Release -o out
+
+      # build a runtime image
+      FROM mcr.microsoft.com/dotnet/aspnet:7.0.1
+
+      # now we copy the build result from the "out" directory into the "app" folder
+      COPY --from=build-env /app/out/ .
+      WORKDIR /app /*after the copy, we must specify the WORKDIR*/
+      # then we specify the entryPoint and the startup project which is API
+      ENTRYPOINT [ "dotnet", "API.dll" ]
+
+    - the file ".dockerignore" contents only folder/files which we want to ignore/don't copy into the container
+
+    - then go back to the root folder of the project (Reactivities) and run the following cmd:
+      /*
+        stnmboa = username on hub.docker
+        reactivities = name of docker image we want to create
+        " ." = copy everything
+      */
+        docker build -t stnmboa/reactivities:latest .
+
+    - For testing purppose, we could run the app from localhost:8080, just run the cmd:
+      docker run --rm -it -p 8080:80 stnmboa/reactivities
+    
+    - How to push the image into the hub.docker?
+      * first: from the command line, login into docker with the cmd: 
+        docker login (with username and password)
+      * the push the image to hub.docker
+        docker push stnmboa/reactivities:latest
+
+  /************************************************************************************/
+  AFTER CREATED A DOCKER IMAGE, HOW TO DEPLOY THE APP ON FLY.IO?
+    In to order to deploy the app on fly.io, we must read the documentation: https://fly.io/docs/speedrun/
+      * install flyctl: flyctl is a command-line utility that lets you work with Fly.io, from creating your 
+        account to deploying your applications. It runs on your local device so you'll want to install the 
+        version that's appropriate for your operating system.
+
+        windows install command: 
+          powershell -Command "iwr https://fly.io/install.ps1 -useb | iex"
+
+      * After installed the flyctl, just sign in into Fly.io using your github repo (better solution)
+        fly auth signup
+
+      * then Sign In into FlyIo. Your browser will open up with the Fly.io sign-in screen, enter your user name 
+        and password to sign in. If you signed up with GitHub, use the Sign in with GitHub button to sign in.
+        Microsoft WSL users may need to run the following command to make this work:
+
+          ln -s /usr/bin/wslview /usr/local/bin/xdg-open
+          fly auth login 
+          (une requete d'ajout de carte de credit peut obligatoire afin de deployer son APP)
+
+      * to launch the app on Fly.io with the cmd:
+        fly launch --image stnmboa/reactivities:latest
+          - ? Choose an app name (leave blank to generate one): reactivities-api-app
+          - ? Choose a region for deployment: Paris, France (cdg) : select the default
+          - ? Would you like to set up a Postgresql database now? Yes
+              after this, we MUST SAVE DB CONNECTION INFO INTO A SAFE PLACE. WE DO NOT HAVE ANOTHER OPTION THE SAVE THEM AFTER
+          - ? Select configuration: Development - Single node, 1x shared CPU, 256MB RAM, 1GB disk: this is the FREE option
+          - ? Would you like to set up an Upstash Redis database now? ==> NO
+          - ? Would you like to deploy now? NO
+              we will deploy the App after because we need to config something else
+      * to deploy the app, jut run the cmd:
+        flyctl deploy
+
+  /************************************************************************************/
+  HOW TO STORE SECRET INFO using Fly.io?
+  - by run this cmd: 
+    fly secrets list
+
+  - To generate strong password, we can use https://delinea.com/resources/password-generator-it-tool
+  - For Doker, I don't recommand to use special characters/Symbols (%^&!#@%^..=) into the Password because docker doesn't like them
+
+  - We need to set all secret Key presents into appsettings.json into the fly secrets list:
+    fly secrets set TokenKey=xwuqTw7eV7cQ5pXxQhuzmcSdhbVbhjD
+    fly secrets set Cloudinary__ApiSecret=uvDbMuIxP_XIpZtCw0dmpnTMEr
+
+  - after updated the connectionString config into ApplicationServiceExtensions, we must build again the 
+  app using Docker and push a new image to hub.docker
+
+  /************************************************************************************/
+  FINALLY, WE CAN DEPLOY THE APP
+  - migrate the repo from gitlab to github
+  - then clone it locally
+  - into the main project root folder (Reactivities in this case), cree the workflow folder 
+    following the path: .github/workflows/docker-push.yml
+
+    the content of the file docker-push.yml must be somthing like
+
+              name: ci #name of the file
+
+              on:
+                push:
+                  branches:
+                    - 'main'
+
+              jobs:
+                docker:
+                  runs-on: ubuntu-latest
+                  steps:
+                    -
+                      #name: Set up QEMU #we don't need this
+                      #uses: docker/setup-qemu-action@v2 #we don't need this
+                    -
+                      name: Set up Docker Buildx #this will biuld a docker image for us
+                      uses: docker/setup-buildx-action@v2
+                    -
+                      name: Login to Docker Hub
+                      uses: docker/login-action@v2
+                      with:
+                        username: ${{ secrets.DOCKERHUB_USERNAME }} #this info will be store into gitHub web site 
+                        password: ${{ secrets.DOCKERHUB_TOKEN }}
+                    -
+                      name: Build and push
+                      uses: docker/build-push-action@v4
+                      with:
+                        push: true
+                        tags: user/app:latest
+
+  - how to store secrets.DOCKERHUB_USERNAME/DOCKERHUB_TOKEN
+    - go the github/reactivities repo
+    - click on settings (settings of this repo)
+    - from the security tab, select action / new repository secret
+  /************************************************************************************/
+  /************************************************************************************/
+  /************************************************************************************/
+  /************************************************************************************/
+  /************************************************************************************/
+  /************************************************************************************/
+  /************************************************************************************/
+  

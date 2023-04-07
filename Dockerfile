@@ -2,9 +2,7 @@ FROM mcr.microsoft.com/dotnet/sdk:7.0 as build-env
 WORKDIR /app
 EXPOSE 8080
 
-# copy .csproj and restore distinct layers
-# this cmd will copy <E:\projects\dotnetcore7react18\Reactivities\Reactivities.sln> 
-# into the /app(docker container) folder
+# copy .csproj and restore distinct layers | this cmd will copy <E:\projects\dotnetcore7react18\Reactivities\Reactivities.sln>  |into the /app(docker container) folder
 COPY "Reactivities.sln" "Reactivities.sln" 
 COPY "API/API.csproj" "API/API.csproj"
 COPY "Application/Application.csproj" "Application/Application.csproj"
@@ -17,12 +15,12 @@ RUN dotnet restore "Reactivities.sln"
 
 # copy everything else from local folder to the WORKDIR
 COPY . .
-
+WORKDIR /app
 RUN dotnet publish -c Release -o out
 
 # build a runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:7.0.1
-
+WORKDIR /app
 # now we copy the build result from the "out" directory into the "app" folder
 COPY --from=build-env /app/out/ .
 

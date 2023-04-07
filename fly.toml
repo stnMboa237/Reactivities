@@ -1,37 +1,32 @@
-# fly.toml file generated for reactivities-api-app on 2023-04-06T07:30:05+02:00
+# fly.toml file generated for reactivities-api-app on 2023-04-07T11:06:15+02:00
 
 app = "reactivities-api-app"
 kill_signal = "SIGINT"
 kill_timeout = 5
-mounts = []
 primary_region = "cdg"
-processes = []
 
 [build]
   image = "stnmboa/reactivities:latest"
 
-#[ENV] allows us to set some env variables. for exple, we need to specify to fly.io that we want to app to
-# run on port 8080. to do so, we can set ASPNETCORE_URLS and other not secret config value like Cloudinary (cloudname, apiKey)
-
 [env]
-  ASPNETCORE_URLS="http://+:8080"
-  Cloudinary__Cloudname="dvyclpuks"
-  Cloudinary__ApiKey="245423816678958"
+  ASPNETCORE_URLS = "http://+:8080"
+  Cloudinary__Cloudname = "dvyclpuks"
+  Cloudinary__ApiKey = "245423816678958"
 
 [[services]]
+  protocol = "tcp"
   internal_port = 8080
   processes = ["app"]
-  protocol = "tcp"
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
   [services.concurrency]
+    type = "connections"
     hard_limit = 25
     soft_limit = 20
-    type = "connections"
-
-  [[services.ports]]
-    force_https = true
-    handlers = ["http"]
-    port = 80
-
-  [[services.ports]]
-    handlers = ["tls", "http"]
-    port = 443

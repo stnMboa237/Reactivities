@@ -498,9 +498,6 @@ to do this, run: dotnet ef migrations add MigrationName -p dbProjectName -s Star
      dism.exe /Online /Enable-Feature:Microsoft-Hyper-V /All
      bcdedit /set hypervisorlaunchtype auto
 
-    after installed docker, you can run an instance of postGres using the following command:
-      docker run --name dev -e POSTGRES_USER=admin -e POSTGRES_PASSWORD=secret -p 5432:5432 -d postgres:latest
-
   In order to remove Sqlite and use Postgres in Production mode, we must:
     - delete Migrations Folder from Persistence project
     - run the following cmd: 
@@ -512,6 +509,17 @@ to do this, run: dotnet ef migrations add MigrationName -p dbProjectName -s Star
     then install this package for the Persistence project.
     - create a new MIgration: 
       dotnet ef migrations add PostgresInitial -p Persistence/ -s API/
+
+    after installed docker, you can run an instance of postGres using the following command:
+      docker run --name dev -e POSTGRES_USER=admin -e POSTGRES_PASSWORD=secret -p 5432:5432 -d postgres:latest
+
+      RUN THE APP USING from the API folder using:
+        dotnet run
+
+      install postgres extension on vsCode then connect to the local DB by
+        - create new connection: hostname = localhost
+        - userName: admin, password =secret, port=5432, standardConnection,
+
 
     - To deploy our app, we can use Heroku (no longer free).
     An alternative is Fly.io (https://fly.io/).
@@ -571,9 +579,13 @@ to do this, run: dotnet ef migrations add MigrationName -p dbProjectName -s Star
         " ." = copy everything
       */
         docker build -t stnmboa/reactivities:latest .
+        docker push stnmboa/reactivities:latest
 
-    - For testing purppose, we could run the app from localhost:8080, just run the cmd:
-      docker run --rm -it -p 8080:80 stnmboa/reactivities
+
+    - For testing purppose, we could run the app from localhost:8080, just run the cmd
+      -rm: remove the image when we stop the run
+      -it: run the image in INTERACTIVE MODE
+        docker run --rm -it -p 8080:80 stnmboa/reactivities
     
     - How to push the image into the hub.docker?
       * first: from the command line, login into docker with the cmd: 
@@ -612,6 +624,52 @@ to do this, run: dotnet ef migrations add MigrationName -p dbProjectName -s Star
           - ? Would you like to set up an Upstash Redis database now? ==> NO
           - ? Would you like to deploy now? NO
               we will deploy the App after because we need to config something else
+
+          this will generate a file called fly.toml. it content could be:
+
+
+
+
+          # fly.toml file generated for reactivities-api-app on 2023-04-06T07:30:05+02:00
+
+                          app = "reactivities-api-app"
+                          kill_signal = "SIGINT"
+                          kill_timeout = 5
+                          primary_region = "cdg"
+                          processes = []
+
+                          [build]
+                            image = "stnmboa/reactivities:latest"
+
+                          #[ENV] allows us to set some env variables. for exple, we need to specify to fly.io that we want to app to
+                          # run on port 8080. to do so, we can set ASPNETCORE_URLS and other not secret config value like Cloudinary (cloudname, apiKey)
+
+                          [env]
+                            ASPNETCORE_URLS="http://+:8080"
+                            Cloudinary__Cloudname="dvyclpuks"
+                            Cloudinary__ApiKey="245423816678958"
+
+                          [[services]]
+                            internal_port = 8080
+                            processes = ["app"]
+                            protocol = "tcp"
+                            [services.concurrency]
+                              hard_limit = 25
+                              soft_limit = 20
+                              type = "connections"
+
+                            [[services.ports]]
+                              force_https = true
+                              handlers = ["http"]
+                              port = 80
+
+                            [[services.ports]]
+                              handlers = ["tls", "http"]
+                              port = 443
+
+
+
+
       * to deploy the app, jut run the cmd:
         flyctl deploy
 
@@ -621,11 +679,11 @@ to do this, run: dotnet ef migrations add MigrationName -p dbProjectName -s Star
     fly secrets list
 
   - To generate strong password, we can use https://delinea.com/resources/password-generator-it-tool
-  - For Doker, I don't recommand to use special characters/Symbols (%^&!#@%^..=) into the Password because docker doesn't like them
+  - For Docker, I don't recommand to use special characters/Symbols (%^&!#@%^..=) into the Password because docker doesn't like them
 
   - We need to set all secret Key presents into appsettings.json into the fly secrets list:
-    fly secrets set TokenKey=xwuqTw7eV7cQ5pXxQhuzmcSdhbVbhjD
-    fly secrets set Cloudinary__ApiSecret=uvDbMuIxP_XIpZtCw0dmpnTMEr
+    fly secrets set TokenKey=sEe8ekxINwGafsbsHz
+    fly secrets set Cloudinary__ApiSecret=uvDbMuIx
 
   - after updated the connectionString config into ApplicationServiceExtensions, we must build again the 
   app using Docker and push a new image to hub.docker

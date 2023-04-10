@@ -731,8 +731,69 @@ to do this, run: dotnet ef migrations add MigrationName -p dbProjectName -s Star
     - go the github/reactivities repo
     - click on settings (settings of this repo)
     - from the security tab, select action / new repository secret
+
+  - after created the docker-push.yml file, commit everything and then push everything to the main branch.
+  then, go back to github repo/actions. now, we must see a button called docker-push.
+  we have to click on "run the workflow" and then wait for the build and run result
+
+  - if the worklow runs without errors, go back to the vsCode and run the following cmd to deploy the app 
+  on fly.io with the latest modifications
+    fly deploy
+
   /************************************************************************************/
+  HOW TO GET LOGS FROM FLY.IO after app deployed?
+    - we can get the logs via the fly.io web site
+    - or via the cmd line using the cmd:
+      fly auth login
+      fly logs --app <app_name>
+
   /************************************************************************************/
+  Comment faire en cas de bug/ou d'ajout de nouvelle fonctionnalité?
+
+  1) on crée une branche partant de la branche la plus avancée (branch main)
+  2) on nomme la branche créée suivant la feature/bug-fix á implementer
+  3) on se positionne la nouvelle branche créée, on fait le dev
+  4) HORS CONTEXT: afin que l'image docker soit recréée et redeployer lorsque nous faisons un PUSH sur la
+                   la branche MAIN, on rajouter au modifie le docker-push.yml de la façon suivante:
+                   (ATTENTION AU ESPACE, AU TAB ETC... CAR LES FICHIERS.YML SONT TRES CAPRICIEUX) 
+
+
+name: docker-push #NOM DU FICHIER
+
+on:
+  workflow_dispatch:
+  push: #LE DEPLOY S'ACTIVE QUAND JE PUSH SUR LA BRANCHE MAIN
+    branches:
+      - 'main'
+env:
+  FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }} #SECRET KEY MISE DANS LA REPO/SETTINGS/ACTIONS; CE TOKEN EST OBTENU AVEC LA CMD: $fly auth token
+jobs:#LISTE DES JOBS DOCKER A EXECUTER
+  docker:#NOM DU P1ER JOB
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Set up Docker Buildx #this will biuld a docker image for us
+        uses: docker/setup-buildx-action@v2
+      -
+        name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }} #this info will be store into gitHub/repoName/setings/security/secrets variable web site 
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      -
+        name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          push: true
+          tags: stnmboa/reactivities:latest #NOM DE L'APPLICATION
+  deploy: #NOM DU 2EME JOB
+    needs: docker #NEED <=> L'EXECUTION DU JOB "deploy" REQUIERT L'ATTENTE DE L'EXECUTION DU JOB "docker"
+    name: Deploy app
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: flyctl deploy --remote-only
   /************************************************************************************/
   /************************************************************************************/
   /************************************************************************************/

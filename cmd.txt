@@ -513,6 +513,8 @@ to do this, run: dotnet ef migrations add MigrationName -p dbProjectName -s Star
     after installed docker, you can run an instance of postGres using the following command:
       docker run --name dev -e POSTGRES_USER=admin -e POSTGRES_PASSWORD=secret -p 5432:5432 -d postgres:latest
 
+      OUVRIR DOCKER DESKPTOP, RUN L'IMAGE dev DU SERVEUR POSTGRES
+
       RUN THE APP USING from the API folder using:
         dotnet run
 
@@ -768,7 +770,7 @@ on:
 env:
   FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }} #SECRET KEY MISE DANS LA REPO/SETTINGS/ACTIONS; CE TOKEN EST OBTENU AVEC LA CMD: $fly auth token
 jobs:#LISTE DES JOBS DOCKER A EXECUTER
-  docker:#NOM DU P1ER JOB
+  docker:#NOM DU 1ER JOB
     runs-on: ubuntu-latest
     steps:
       -
@@ -794,8 +796,64 @@ jobs:#LISTE DES JOBS DOCKER A EXECUTER
       - uses: actions/checkout@v3
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - run: flyctl deploy --remote-only
+
+  5) apres le push sur la branche main, on va sur Action/docker-push. on devrait avoir 2 jobs (docker - deploy App)
+
   /************************************************************************************/
+  HOW TO ACCESS DB INTO FlyIo
+  In order to access to the app DB from FlyIO, we need to create a "proxy". just use the followings cmd:
+
+  1) fly apps list # to list all apps on Fly.io
+  2) fly proxy <a port number from which we want to access DB>:<DB port on flyIO> -a <name od the DB app>
+      $ fly proxy 6543:5432 -a reactivities-api-app-db
+      this cmd allows us to accesss to DB from the localHost on port 6543
+
+  3) from vsCode, after install postgres extension, go to create a new db connection
+    host: localhost
+    username: postgres
+    password: it's what we save previously after the creation of the DB on fly.io (si on n'a pas save les infos 
+      de la DB créée sur fly.io, alors, on a aucun moyen de recuperer le mot de passe de la DB créée.
+      la seule chose a faire, c'est de supprimer et de recréer une nouvelle DB sur fly.io)
+  4) standard Connection
+  5) choose <DB_name>?sslmode=disable
+  6) insert a displayName for the DB
+
   /************************************************************************************/
+  SECURITY: 
+  In order to check if the http headers are ok, we can check via the website:
+    https://securityheaders.com/
+  We must enter the link of our website: https://reactivities-api-app.fly.dev/
+  Ath this time, we get a RESULT = F (the worse!!!!)
+
+  the HTTP headers are missing. To enforce security, we MUST add them.
+
+    - Strict-Transport-Security: HTTP Strict Transport Security is an excellent feature to support on your site
+        and strengthens your implementation of TLS by getting the User Agent to enforce the use of HTTPS.
+        Recommended value "Strict-Transport-Security: max-age=31536000; includeSubDomains".
+    
+    - Content-Security-Policy: is an effective measure to protect your site from XSS attacks. By whitelisting
+        sources of approved content, you can prevent the browser from loading malicious assets.
+
+    - X-Frame-Options: tells the browser whether you want to allow your site to be framed or not. By preventing
+        a browser from framing your site you can defend against attacks like clickjacking.
+        Recommended value "X-Frame-Options: SAMEORIGIN".
+    
+    - X-Content-Type-Options: stops a browser from trying to MIME-sniff the content type and forces it to stick
+        with the declared content-type. The only valid value for this header is 
+        "X-Content-Type-Options: nosniff".
+    
+    - Referrer-Policy: is a new header that allows a site to control how much information the browser includes
+        with navigations away from a document and should be set by all sites.
+
+    - Permissions-Policy: is a new header that allows a site to control which features and APIs
+        can be used in the browser.
+        
+  We must setup the app in order to get grade = A (the best)
+
+  1) install a nuget package (for the API project):
+    NWebsec.AspNetCore.Middleware by André N. Klingsheim (v.3.0)
+
+
   /************************************************************************************/
   /************************************************************************************/
   /************************************************************************************/

@@ -30,10 +30,11 @@ namespace API.Extensions
                 opt.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true, /* validate if token is valid token!!! IMPORTANT!!! */
-                    IssuerSigningKey = key,  /*the key here must be the same as into TokenServices.cs */
-                    ValidateIssuer = false,  /*nous validons pas car nous voulons laisser la validation aussi basique que possible*/
-                    ValidateAudience = false,/*nous validons pas car nous voulons laisser la validation aussi basique que possible*/
-
+                    IssuerSigningKey = key,  /* the key here must be the same as into TokenServices.cs */
+                    ValidateIssuer = false,  /* nous validons pas car nous voulons laisser la validation aussi basique que possible*/
+                    ValidateAudience = false,/* nous validons pas car nous voulons laisser la validation aussi basique que possible*/
+                    ValidateLifetime = true, /* la durée de vie minimale par defaut d'un token est de 5min. Mais nous avons defini 1min dans la CreateToken á des fins de tests*/
+                    ClockSkew = TimeSpan.Zero, /* ceci ramène á zero la durée de vie minimale d'un token cad qu'apres 1 min, le token generé par CreateToken sera NON VALIDE*/
                 };
                 /*begin: get the from the Header for SignalR*/
                 opt.Events = new JwtBearerEvents

@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using Domain;
 using Microsoft.IdentityModel.Tokens;
@@ -29,7 +30,7 @@ namespace API.Services
 
             var tokenDesciptor = new SecurityTokenDescriptor {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddDays(7), /*duree de vie du Token: 7 jours. Normalement, il devrait etre de 1-2h max*/
+                Expires = DateTime.UtcNow.AddMinutes(1), /*duree de vie du Token: 1 min. Normalement, il devrait etre de 1-2h max*/
                 SigningCredentials = creds
             };
 
@@ -38,6 +39,13 @@ namespace API.Services
             var token = tokenHandler.CreateToken(tokenDesciptor);
 
             return tokenHandler.WriteToken(token);
+        }
+
+        public RefreshToken GenerateRefreshToken() {
+            var randomNumber = new Byte[32];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(randomNumber);
+            return new RefreshToken {Token = Convert.ToBase64String(randomNumber)};
         }
     }
 }

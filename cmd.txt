@@ -876,7 +876,7 @@ jobs:#LISTE DES JOBS DOCKER A EXECUTER
     );
 
   /************************************************************************************/
-  SECTION 23 - IDENTITY/SECURITY COOKBOOK
+  SECTION 23 - IDENTITY/SECURITY COOKBOOK>>>>>PART 1 : FACEBOOK LOGIN
     
     for these new features, we will create a new branch
       git checkout -b sect23_facebookLogin
@@ -939,12 +939,39 @@ jobs:#LISTE DES JOBS DOCKER A EXECUTER
             $ git merge sect23_facebookLogin
             $ git push origin main
 
+  /************************************************************************************/
+  SECTION 23 - IDENTITY/SECURITY COOKBOOK>>>>>PART 2 : REFRESH TOKEN
+      - Refresh Tokens: reduce the lifetime of our current token and increase security about token JWT.
+        * It carries information to get a new access token. This allows us to reduce validity time of JWT Token
+        * It checks the expiration time of current access_token
+        * Long lived
+        * Refresh token can be stored into the DB with the user object as well as on the client (FrontEnd)
+        * Refresh token can be stored into Http only cookie (so it can't be accessible via JavaScript(GOOD), 
+          étant Http, il sera envoyé via chsque requete HTTP)
+        * Le but ici est d'obtenir ubn NOUVEL ACCESS_TOKEN avant l'expiration du access_token courant
+        * Le fonctionnement du refresh token est:
+            # Login du user avec ses credentials
+            # le serveur repond avec un token JWT (stocker dans le local Storage)
+            # avant expiration du token JWT, une requete HTTP (api/account/refreshToken <=> cookie) part du 
+              serveur vers le front et fait une update du token JWT. Ceci est transparent pour l'user 
 
-            
-          
+        * After the creation of the Domain Class (RefreshToken), we can create a new migration by running
+          $ dotnet ef migrations add sect23_addedRefreshToken -p Persistence/ -s API/
+        * Create the method: GenerateRefreshToken 
 
 
-      - Refresh Tokens: reduce the lifetime of our current token and increase security about token JWT
+
+
+
+
+
+
+
+
+
+
+
+
       - Email confirmation: send a verification Email for new users to confirm the email used by them for registration
 
   /************************************************************************************/

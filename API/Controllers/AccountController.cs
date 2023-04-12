@@ -28,6 +28,47 @@ namespace API.Controllers
             };
         }
 
+        // we use this method WHEN USER REGISTER, LOGIN OR FACEBOOK_LOGIN
+        private async Task SetRefreshToken(AppUser user) {
+            // 1 - we generate a new refreshToken
+            var refreshToken = _tokenService.GenerateRefreshToken();
+            
+            // 2 - then we add the new token to the User tokens Collection
+            user.RefreshTokens.Add(refreshToken);
+            
+            // 3 - we save the token to the DB afin que l'user compare le token avec ce qui est stocké en DB
+            await _userManager.UpdateAsync(user);
+
+            // 4 - send to token back to the front via a Cookie
+            var cookieOption = new CookieOptions {
+                HttpOnly = true, // our cookie is accessible ONLY via HTTP and not via javaScript
+                Expires = DateTime.UtcNow.AddDays(7),
+            };
+            
+            Response.Cookies.Append("refreshToken", refreshToken.Token, cookieOption);
+        }
+
+        [Authorize]
+        [HttpPost("refreshToken")]
+        public async Task<ActionResult<UserDto>> RefreshToken() {
+            var refreshToken = Request.Cookies["refreshToken"];
+            var user = await _userManager.Users
+                .Include(a => a.RefreshTokens)
+                .FirstOrDefaultAsync(x => x.UserName == User.FindFirstValue(ClaimTypes.Name));
+
+            if(user == null) {
+                return Unauthorized();
+            }
+
+            var oldToken = user.RefreshTokens.SingleOrDefault(x => x.Token == refreshToken);
+
+            if(oldToken != null && !oldToken.IsActive) {
+                return Unauthorized();
+            }
+
+            return CreateUserObject(user);
+        } 
+
         [AllowAnonymous]
         [HttpPost("fbLogin")]
         public async Task<ActionResult<UserDto>> FacebookLogin(string accessToken) {
@@ -73,6 +114,7 @@ namespace API.Controllers
             if (!result.Succeeded) {
                 return BadRequest("Problem creating user account");
             }
+            await SetRefreshToken(user);
             return CreateUserObject(user);
         }
 
@@ -91,6 +133,7 @@ namespace API.Controllers
             var result = await _userManager.CheckPasswordAsync(user, loginDto.Password);
             if (result)
             {
+                await SetRefreshToken(user);
                 return CreateUserObject(user);
             }
             return Unauthorized();
@@ -123,6 +166,7 @@ namespace API.Controllers
 
             if (result.Succeeded)
             {
+                await SetRefreshToken(user);
                 return CreateUserObject(user);
             }
 
@@ -136,7 +180,7 @@ namespace API.Controllers
             var user = await _userManager.Users
                 .Include(p => p.Photos)
                 .FirstOrDefaultAsync(x => x.Email == User.FindFirstValue(ClaimTypes.Email));
-            
+            await SetRefreshToken(user);
             return CreateUserObject(user);
         }
 

@@ -933,6 +933,12 @@ jobs:#LISTE DES JOBS DOCKER A EXECUTER
               In case of problems with the https certificate, run:
                 $ dotnet dev-certs https --clean
                 $ dotnet dev-certs https --trust
+          m) at this point, we can commit on the local branch and push/sync with remote
+          n) to deploy the app, we must merge our changes from the feature branch to Main branch 
+            $ git checkout main
+            $ git merge sect23_facebookLogin
+            $ git push origin main
+
 
             
           

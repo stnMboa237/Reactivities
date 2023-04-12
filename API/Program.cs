@@ -37,33 +37,34 @@ app.UseReferrerPolicy(opt => opt.NoReferrer()); //header = Referrer-Policy
 app.UseXXssProtection(opt => opt.EnabledWithBlockMode()); // header = Content-Security-Policy: add a protection against the cross site scripting header
 app.UseXfo(opt => opt.Deny()); //X-Frame-Options
 
-// we use this in dev Mode to check the headers which we want to enable via the "CustomSource(...)"
+// // we use this in dev Mode to check the headers which we want to enable via the "CustomSource(...)"
 // app.UseCspReportOnly(opt => opt //header= Content-Security-Policy-Report-Only
 //     .BlockAllMixedContent() //ceci force l'app á charger que du contenu HTTPS ou juste HTTP. Mais pas un mix des 2
 //     .StyleSources(s => s.Self()
-//         .CustomSources("https://fonts.googleapis.com") // exception: ok pour ce contenu
+//         .CustomSources("https://fonts.googleapis.com", "sha256-e6v1SBY0/nWORF0cSCN2iKUc90hYDPlQUe8okJKLZcY=") // exception: ok pour ce contenu
 //     ) //approuve seulement les CSS provenant de notre APP (wwwroot)
 //     .FontSources(s => s.Self()
 //         .CustomSources("https://fonts.gstatic.com", "data:") // exception: ok pour ce contenu
 //     ) //approuve seulement les fonts provenant de notre APP (wwwroot)
 //     .FormActions(s => s.Self()) //approuve seulement les form action provenant de notre APP (wwwroot)
 //     .FrameAncestors(s => s.Self()) //approuve seulement les frame provenant de notre APP (wwwroot)
-//     .ImageSources(s => s.Self().CustomSources("blob:", "https://res.cloudinary.com")) //approuve seulement les images provenant de notre APP (wwwroot)
-//     .ScriptSources(s => s.Self()) //approuve seulement les scripts action provenant de notre APP (wwwroot)
+//     .ImageSources(s => s.Self() //approuve seulement les images provenant de notre APP (wwwroot)
+//         .CustomSources("blob:", "data:", "https://res.cloudinary.com", "https://platform-lookaside.fbsbx.com")) 
+//     .ScriptSources(s => s.Self()
+//         .CustomSources("https://connect.facebook.net")    
+//     ) //approuve seulement les scripts action provenant de notre APP (wwwroot)
 // );
 
-app.UseCsp(opt => opt //header= Content-Security-Policy-Report-Only
-    .BlockAllMixedContent() //ceci force l'app á charger que du contenu HTTPS ou juste HTTP. Mais pas un mix des 2
+app.UseCsp(opt => opt
+    .BlockAllMixedContent()
     .StyleSources(s => s.Self()
-        .CustomSources("https://fonts.googleapis.com") // exception: ok pour ce contenu
-    ) //approuve seulement les CSS provenant de notre APP (wwwroot)
-    .FontSources(s => s.Self()
-        .CustomSources("https://fonts.gstatic.com", "data:") // exception: ok pour ce contenu
-    ) //approuve seulement les fonts provenant de notre APP (wwwroot)
-    .FormActions(s => s.Self()) //approuve seulement les form action provenant de notre APP (wwwroot)
-    .FrameAncestors(s => s.Self()) //approuve seulement les frame provenant de notre APP (wwwroot)
-    .ImageSources(s => s.Self().CustomSources("blob:", "https://res.cloudinary.com")) //approuve seulement les images provenant de notre APP (wwwroot)
-    .ScriptSources(s => s.Self()) //approuve seulement les scripts action provenant de notre APP (wwwroot)
+        .CustomSources("https://fonts.googleapis.com", "sha256-e6v1SBY0/nWORF0cSCN2iKUc90hYDPlQUe8okJKLZcY=")
+    ).FontSources(s => s.Self().CustomSources("https://fonts.gstatic.com", "data:"))
+    .FormActions(s => s.Self())
+    .FrameAncestors(s => s.Self())
+    .ImageSources(s => s.Self()
+        .CustomSources("blob:", "data:", "https://res.cloudinary.com", "https://platform-lookaside.fbsbx.com")) 
+    .ScriptSources(s => s.Self().CustomSources("https://connect.facebook.net"))
 );
 
 /* end: config the http Header for security policies(directly after ExecptionMiddleware)*/

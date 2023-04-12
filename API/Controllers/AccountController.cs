@@ -16,10 +16,64 @@ namespace API.Controllers
     {
         private readonly UserManager<AppUser> _userManager;
         private readonly TokenService _tokenService;
-        public AccountController(UserManager<AppUser> userManager, TokenService tokenService)
+        private readonly IConfiguration _config;
+        private readonly HttpClient _httpClient;
+        public AccountController(UserManager<AppUser> userManager, TokenService tokenService, IConfiguration config)
         {
+            _config = config;
             _tokenService = tokenService;
             _userManager = userManager;
+            _httpClient = new HttpClient{
+                BaseAddress = new System.Uri("https://graph.facebook.com")
+            };
+        }
+
+        [AllowAnonymous]
+        [HttpPost("fbLogin")]
+        public async Task<ActionResult<UserDto>> FacebookLogin(string accessToken) {
+            var fbVerifyKeys = _config["Facebook:AppId"] + "|" + _config["Facebook:ApiSecret"];
+
+            // verifyTokenResponse: checks if the token send by Facebook is a valid token for our app defined into developers.facebook.com
+            var verifyTokenResponse = await _httpClient
+                .GetAsync($"debug_token?input_token={accessToken}&access_token={fbVerifyKeys}");
+
+            if(!verifyTokenResponse.IsSuccessStatusCode) {
+                return Unauthorized();
+            }
+
+            // var fbUrl = "me?access_token="+accessToken+$"&fields=name,email,picture.width(100).height(100)";
+            var fbUrl = $"me?access_token={accessToken}&fields=name,email,picture.width(100).height(100)";
+
+            var fbUserInfo = await _httpClient.GetFromJsonAsync<FacebookDto>(fbUrl);
+
+            //check if the facebook user login into the App before
+            var user = await _userManager.Users.Include(p => p.Photos)
+                .FirstOrDefaultAsync(x => x.Email == fbUserInfo.Email);
+
+            if(user != null) {
+                // if the facebook user already exists, so, just return the UserDto object
+                return CreateUserObject(user);
+            }
+
+            user = new AppUser {
+                DisplayName = fbUserInfo.Name,
+                Email = fbUserInfo.Email,
+                UserName = fbUserInfo.Email,
+                Photos = new List<Photo>{
+                    new Photo {
+                        Id = "fb_" + fbUserInfo.Id,
+                        IsMain = true,
+                        Url = fbUserInfo.Picture.data.Url,
+                    }
+                }
+            };
+
+            var result = await _userManager.CreateAsync(user);
+
+            if (!result.Succeeded) {
+                return BadRequest("Problem creating user account");
+            }
+            return CreateUserObject(user);
         }
 
         [AllowAnonymous]

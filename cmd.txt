@@ -853,8 +853,94 @@ jobs:#LISTE DES JOBS DOCKER A EXECUTER
   1) install a nuget package (for the API project):
     NWebsec.AspNetCore.Middleware by André N. Klingsheim (v.3.0)
 
+  2) add this config into the program.cs file after app.UseMiddleware<ExceptionMiddleware>();
+
+    app.UseXContentTypeOptions(); //header = X-Content-Type-Options: prevents app from Mime Sniffing pof the content type
+    app.UseReferrerPolicy(opt => opt.NoReferrer()); //header = Referrer-Policy
+    app.UseXXssProtection(opt => opt.EnabledWithBlockMode()); // header = Content-Security-Policy: add a protection against the cross site scripting header
+    app.UseXfo(opt => opt.Deny()); //X-Frame-Options
+
+    // we use this in dev Mode to check the headers which we want to enable via the "CustomSource(...)"
+    app.UseCspReportOnly(opt => opt //header= Content-Security-Policy-Report-Only
+        .BlockAllMixedContent() //ceci force l'app á charger que du contenu HTTPS ou juste HTTP. Mais pas un mix des 2
+        .StyleSources(s => s.Self()
+            .CustomSources("https://fonts.googleapis.com") // exception: ok pour ce contenu
+        ) //approuve seulement les CSS provenant de notre APP (wwwroot)
+        .FontSources(s => s.Self()
+            .CustomSources("https://fonts.gstatic.com", "data:") // exception: ok pour ce contenu
+        ) //approuve seulement les fonts provenant de notre APP (wwwroot)
+        .FormActions(s => s.Self()) //approuve seulement les form action provenant de notre APP (wwwroot)
+        .FrameAncestors(s => s.Self()) //approuve seulement les frame provenant de notre APP (wwwroot)
+        .ImageSources(s => s.Self().CustomSources("blob:", "https://res.cloudinary.com")) //approuve seulement les images provenant de notre APP (wwwroot)
+        .ScriptSources(s => s.Self()) //approuve seulement les scripts action provenant de notre APP (wwwroot)
+    );
 
   /************************************************************************************/
+  SECTION 23 - IDENTITY/SECURITY COOKBOOK
+    
+    for these new features, we will create a new branch
+      git checkout -b sect23_facebookLogin
+
+    in this section, we will focus on the following topics:
+      - Facebook login: allow a user to register/login into the app using facebook credential. Steps to do so are:
+        * Client login to Facebook
+        * Facebook login success => facebook returns access tokrn to the client
+        * Client sends access token to the API
+        * API verifies token with Facebook
+        * Token verified return user info
+        * API register user and issues JWT
+
+        Setup Facebook login:
+          before the setup, the developer must have a Facebook account.
+          a) go to: https://developers.facebook.com/?locale=fr_FR
+          b) login with your personal facebook credentials and then go to "Apps" or "Demarrer"
+          c) Click on "Create App"/Type = "Consumer/Consommateur"/AppName/Create App
+          d) go to Facebook Login on your left bottom./Settings>Valid OAuth redirect URIs: 
+            - add a value for localhost:3000 (front end app)
+            - add a value for prod app :https://reactivities-api-app.fly.dev
+            - Checkbox: Login With the JavaScript SDK: Yes
+              d) go to Facebook Login on your left bottom./Settings>Domaines Autorisés pour le SDK Javascript: 
+            add a value for localhost:3000 (front end app)
+            add a value for prod app :https://reactivities-api-app.fly.dev
+          e) click on save modifications
+          f) go to "App Roles" (menu on your left)/Test users/create 2 tests users/Do You want this automatically installed for test users? > NO
+          g) install the npm package:
+            npm i @greatsumini/react-facebook-login@3.3.0
+          h) Add the facebook login button on the app HomePage and add the corrisponding methos into the accountController (API)
+          i) before made a test from the localhost (which runs on http://localhost:3000), we MUST INSTALL "mkcert"'
+            "mkcert" creates a new local certificate authority which will simulate https request on localHost
+              https://github.com/FiloSottile/mkcert
+              To install "mkcert" on windows, we need to install "chocolatey"
+                the cmd to install "mkcert" is (open powereshell as Admin): 
+                  choco install mkcert
+            - after installation, go back to client-app directory from the CLI and run the cmd:
+              $mkcert -install
+              $mkcert localhost
+          j) after test that the facebookLogin works perfectly, we must add Facebook_AppId into the "fly.toml" file
+              into the "env" (environnment variable): "Facebook__AppId="AppID took from the developers.facebook,com/settings"
+          k) then add Facebook__ApiSecret int to the fly secrets list using the following cmd:
+            fly secrets set Facebook__ApiSecret="App Secret took from the developers.facebook,com/settings
+
+          l) NOW WE ARE READY TO DEPLOY THE APP 
+            * DEPLOY THE FRONT-END APP INTO wwwroot by running cmd: $cd client-app; npm run build 
+            * in order to test the new frontEnd build on localhost:5000, we must add "localhost:5000"
+              in developers.facebook.com/facebook Login/settings>Valid OAuth redirect URIs> Add "localhost:5000"
+              DO THE SAME FOR > Allowed domains for the JavaScript SDK
+            * update "applicationUrl" from launchSettings.json: "applicationUrl": "https://localhost:5000",
+            * TO VERIFY IF the https certificate is already installed for the localhost:5000, we must run this
+              into the root folder Reactivities:
+                $ dotnet dev-certs https >>>>A valid HTTPS certificate is already present.
+              In case of problems with the https certificate, run:
+                $ dotnet dev-certs https --clean
+                $ dotnet dev-certs https --trust
+
+            
+          
+
+
+      - Refresh Tokens: reduce the lifetime of our current token and increase security about token JWT
+      - Email confirmation: send a verification Email for new users to confirm the email used by them for registration
+
   /************************************************************************************/
   /************************************************************************************/
   

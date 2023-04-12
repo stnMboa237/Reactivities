@@ -9,9 +9,10 @@ primary_region = "cdg"
   image = "stnmboa/reactivities:latest"
 
 [env]
-  ASPNETCORE_URLS = "http://+:8080"
-  Cloudinary__Cloudname = "dvyclpuks"
-  Cloudinary__ApiKey = "245423816678958"
+  ASPNETCORE_URLS="http://+:8080"
+  Cloudinary__Cloudname="dvyclpuks"
+  Cloudinary__ApiKey="245423816678958"
+  Facebook__AppId="934829381052107"
 
 [[services]]
   protocol = "tcp"

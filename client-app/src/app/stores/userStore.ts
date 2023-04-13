@@ -31,8 +31,8 @@ export default class UserStore {
     private startRefreshTokenTimer (user: User) { //Buffer.from(data, 'base64')
         const jwtToken = JSON.parse(atob(user.token.split('.')[1])); //atob is deprecated
         const expires = new Date(jwtToken.exp * 1000); // delai d'expiration
-        const timeOut = expires.getTime() - Date.now() - (30*1000); // delai d'attente = 30seconde avant l'expiration du token
-        this.refreshTokenTimeOut = setTimeout(this.refreshToken, timeOut); // this method will be transaparent for the user
+        const timeOut = expires.getTime() - Date.now() - (60*1000); // delai d'attente = 60secondes avant l'expiration du token
+        this.refreshTokenTimeOut = setTimeout(this.refreshToken, timeOut); // this method will be transparent for the user
     }
 
     private stopRefreshTokenTimer () {
@@ -46,7 +46,7 @@ export default class UserStore {
             this.startRefreshTokenTimer(user);
             runInAction(() => this.user = user);
             router.navigate('/activities');
-            store.modalStore.closeModal(); //after loggin, we need to close the modal
+            store.modalStore.closeModal(); //after login, we need to close the modal
         } catch (error) {
             throw error;
         }

@@ -30,7 +30,7 @@ namespace API.Services
 
             var tokenDesciptor = new SecurityTokenDescriptor {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddMinutes(1), /*duree de vie du Token: 1 min. Normalement, il devrait etre de 1-2h max*/
+                Expires = DateTime.UtcNow.AddMinutes(10), /*duree de vie du Token: 10 min. Normalement, il devrait etre de 1-2h max*/
                 SigningCredentials = creds
             };
 

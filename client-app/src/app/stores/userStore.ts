@@ -7,6 +7,7 @@ import { store } from "./store";
 export default class UserStore {
     user: User | null = null;
     fbLoading = false;
+    refreshTokenTimeOut : any;
 
     constructor(){
         makeAutoObservable(this)
@@ -16,10 +17,33 @@ export default class UserStore {
         return !!this.user;
     }
 
+    refreshToken = async() => {
+        try {
+            const user = await agent.Account.refreshToken();
+            runInAction(() => this.user = user)
+            store.commonStore.setToken(user.token);
+            this.startRefreshTokenTimer(user);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    private startRefreshTokenTimer (user: User) { //Buffer.from(data, 'base64')
+        const jwtToken = JSON.parse(atob(user.token.split('.')[1])); //atob is deprecated
+        const expires = new Date(jwtToken.exp * 1000); // delai d'expiration
+        const timeOut = expires.getTime() - Date.now() - (30*1000); // delai d'attente = 30seconde avant l'expiration du token
+        this.refreshTokenTimeOut = setTimeout(this.refreshToken, timeOut); // this method will be transaparent for the user
+    }
+
+    private stopRefreshTokenTimer () {
+        clearTimeout(this.refreshTokenTimeOut)
+    }
+
     login = async(creds: UserFormValues) => {
         try {
             const user = await agent.Account.login(creds);
             store.commonStore.setToken(user.token);
+            this.startRefreshTokenTimer(user);
             runInAction(() => this.user = user);
             router.navigate('/activities');
             store.modalStore.closeModal(); //after loggin, we need to close the modal
@@ -32,6 +56,7 @@ export default class UserStore {
         try {
             const user = await agent.Account.register(creds);
             store.commonStore.setToken(user.token);
+            this.startRefreshTokenTimer(user);
             runInAction(() => this.user = user);
             router.navigate('/activities');
             store.modalStore.closeModal(); //after loggin, we need to close the modal
@@ -42,6 +67,7 @@ export default class UserStore {
 
     logout = () => {
         store.commonStore.setToken(null);
+        this.stopRefreshTokenTimer();
         this.user = null;
         router.navigate('/'); /*back to homepage*/
     }
@@ -49,7 +75,9 @@ export default class UserStore {
     getUser = async() => {
         try {
             const user = await agent.Account.current();
+            store.commonStore.setToken(user.token);
             runInAction(() => this.user = user);
+            this.startRefreshTokenTimer(user);
         } catch (error) {
             console.log(error);
         }
@@ -72,6 +100,7 @@ export default class UserStore {
             this.fbLoading = true;
             const user = await agent.Account.fbLogin(accessToken);
             store.commonStore.setToken(user.token);
+            this.startRefreshTokenTimer(user);
             runInAction(() => {
                 this.user = user;
                 this.fbLoading = false;

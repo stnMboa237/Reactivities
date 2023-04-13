@@ -962,19 +962,7 @@ jobs:#LISTE DES JOBS DOCKER A EXECUTER
 
         * After the creation of the Domain Class (RefreshToken), we can create a new migration by running
           $ dotnet ef migrations add sect23_addedRefreshToken -p Persistence/ -s API/
-        * Create the method: GenerateRefreshToken 
-
-
-
-
-
-
-
-
-
-
-
-
+        * Create the method: GenerateRefreshToken for the front/back end
 
 
       - Email confirmation: send a verification Email for new users to confirm the email used by them for registration

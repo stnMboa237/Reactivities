@@ -66,6 +66,7 @@ namespace API.Extensions
                         .AllowAnyMethod()
                         .AllowAnyHeader()
                         .AllowCredentials()
+                        .WithExposedHeaders("WWW-Authenticate", "Pagination") // le fait de specifier tous les headers qu'on souhaite que le server renvoit vers le client
                         .WithOrigins("http://localhost:3000", "https://localhost:3000");
                 });
             });

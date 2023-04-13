@@ -42,7 +42,7 @@ namespace API.Controllers
             // 4 - send to token back to the front via a Cookie
             var cookieOption = new CookieOptions {
                 HttpOnly = true, // our cookie is accessible ONLY via HTTP and not via javaScript
-                Expires = DateTime.UtcNow.AddDays(7),
+                Expires = DateTime.UtcNow.AddDays(7), // the refreshToken will expire in 7 days
             };
             
             Response.Cookies.Append("refreshToken", refreshToken.Token, cookieOption);
@@ -54,6 +54,7 @@ namespace API.Controllers
             var refreshToken = Request.Cookies["refreshToken"];
             var user = await _userManager.Users
                 .Include(a => a.RefreshTokens)
+                .Include(p => p.Photos)
                 .FirstOrDefaultAsync(x => x.UserName == User.FindFirstValue(ClaimTypes.Name));
 
             if(user == null) {

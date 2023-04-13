@@ -1,4 +1,9 @@
 /************************************************************************************/
+  ADD GIT IGNORE FILE
+  From Dot.Net core 3.0, .gitignore can be easily added by simple command. 
+  Run "dotnet new gitignore" on project root folder.
+
+/************************************************************************************/
 --install dotnet 7 SDK, node JS 18.12.1 LTS
 --install from NUGET packet manager: Microsoft.EntityFrameworkCore.Sqlite
 -- Install from dotnet cli: dotnet tool install --global dotnet-ef --version 7.0.1

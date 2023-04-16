@@ -1,4 +1,13 @@
 /************************************************************************************/
+  VSCode Extensions to install:
+    C# for Visual Studio Code (powered by OmniSharp)
+    C# Extensions JosKreati
+    Docker
+    Material Icon Theme
+    NuGet gallery
+    Sqlite
+    Rainbow CSV
+
   ADD GIT IGNORE FILE
   From Dot.Net core 3.0, .gitignore can be easily added by simple command. 
   Run "dotnet new gitignore" on project root folder.
@@ -966,6 +975,37 @@ jobs:#LISTE DES JOBS DOCKER A EXECUTER
 
 
       - Email confirmation: send a verification Email for new users to confirm the email used by them for registration
+      Nous ne mettrons pas en place un serveur de messagerie, mais nous utliserons un service "SendGrid". Si nous
+      decidons d'implementer un service mail from scratch, alors, le mail de confirmation ira certainement dans 
+      les mails indésiderable car tout est basé sur la confiance en ce qui concerne les mails
+        * to use SendGrid, we need to create a free account. 
+        * UserManager: fournit des fonctionnalités en lien avec <Microsoft.AspNetCore.Identity.UserManager>
+        * Email Verification Token: en résumé:
+          a) we generate an email confirmation token
+          b) we send the email to the client Inbox
+          c) then the client receive the confirmation email, and it clik's on a link
+          d) the link is a request which will go to a specific API endPoint. If the token match with what we store 
+          before into the DB, so, we can be sure that the user can access to registration Email address use for it 
+          registration.
+            The token (furnish by th Identity) is a combination of: "SecurityStamp" and "machine key"
+
+        A) create an account into SendGrid.com
+        B) create an email account for the app (app_reactivities@outlook.com). this is a verified Email Account which
+          will be used to send email to users for email verification etc...
+          * To add an appEmail account into sendGrid, go to the Settings>Sender Authentication> Add the app email
+          * Make sure the app email address is verified on SendGrid
+        C) from SendGrid Settings, go to Tracking: we need to disable all settings
+        D) Finally go to API Keys and click on "Create API key"
+
+        Setup SendGrip:
+          * Go to API project, 
+          * NugetGallery>Install "SendGrid by Elmer Thomas, Twilio DX Team v.9.22.0" for "Infrastructure" project
+          * Go to appsettings.json and add:
+            "SendGrid" : {
+                "User": "app_reactivities@outlook.com",
+                "Key": "<Api Key created from SendGrid/settings>"
+            }
+          * Create a service into Infrastructure project to send email
 
   /************************************************************************************/
   /************************************************************************************/

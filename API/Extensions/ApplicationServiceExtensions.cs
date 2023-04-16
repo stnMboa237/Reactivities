@@ -3,6 +3,7 @@ using Application.Core;
 using Application.Interfaces;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Infrastructure.Email;
 using Infrastructure.Photos;
 using Infrastructure.Security;
 using MediatR;
@@ -80,6 +81,10 @@ namespace API.Extensions
             services.AddScoped<IUserAccessor, UserAccessor>();
 
             services.AddScoped<IPhotoAccessor, PhotoAccessor>();
+
+            //add email service SendGrid
+            services.AddScoped<EmailSender>();
+
             services.Configure<CloudinarySettings>(config.GetSection("Cloudinary"));
 
             // Add signalR

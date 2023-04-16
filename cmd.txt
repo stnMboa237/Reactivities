@@ -1014,6 +1014,7 @@ jobs:#LISTE DES JOBS DOCKER A EXECUTER
                 .StyleSources(s => s.Self()
                     .CustomSources("https://fonts.googleapis.com", "sha256-DpOoqibK/BsYhobWHnU38Pyzt5SjDZuR/mFsAiVN7kk=")
                     ...
+  END THIS COURSE!!!
   /************************************************************************************/
   /************************************************************************************/
   

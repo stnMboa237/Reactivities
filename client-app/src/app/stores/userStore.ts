@@ -54,14 +54,13 @@ export default class UserStore {
 
     register = async(creds: UserFormValues) => {
         try {
-            const user = await agent.Account.register(creds);
-            store.commonStore.setToken(user.token);
-            this.startRefreshTokenTimer(user);
-            runInAction(() => this.user = user);
-            router.navigate('/activities');
+            await agent.Account.register(creds);
+            router.navigate(`/account/registerSuccess?email=${creds.email}`);
             store.modalStore.closeModal(); //after loggin, we need to close the modal
-        } catch (error) {
-            throw error;
+        } catch (error: any) {
+            if(error?.response?.status === 400)throw error;
+            store.modalStore.closeModal();
+            console.log(500);
         }
     }
 

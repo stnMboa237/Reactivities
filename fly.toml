@@ -13,6 +13,8 @@ primary_region = "cdg"
   Cloudinary__Cloudname="dvyclpuks"
   Cloudinary__ApiKey="245423816678958"
   Facebook__AppId="934829381052107"
+  SendGrid__User="app_reactivities@outlook.com"
+  SendGrid__Key="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"
 
 [[services]]
   protocol = "tcp"

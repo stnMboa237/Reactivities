@@ -58,7 +58,7 @@ app.UseXfo(opt => opt.Deny()); //X-Frame-Options
 app.UseCsp(opt => opt
     .BlockAllMixedContent()
     .StyleSources(s => s.Self()
-        .CustomSources("https://fonts.googleapis.com", "sha256-e6v1SBY0/nWORF0cSCN2iKUc90hYDPlQUe8okJKLZcY=")
+        .CustomSources("https://fonts.googleapis.com", "sha256-DpOoqibK/BsYhobWHnU38Pyzt5SjDZuR/mFsAiVN7kk=")
     ).FontSources(s => s.Self().CustomSources("https://fonts.gstatic.com", "data:"))
     .FormActions(s => s.Self())
     .FrameAncestors(s => s.Self())

@@ -1007,6 +1007,13 @@ jobs:#LISTE DES JOBS DOCKER A EXECUTER
             }
           * Create a service into Infrastructure project to send email
 
+          * after each deploy of our client-app into the wwwroot folder, WE MUST SET THE CORRECT VALUE OF THE HASH-KEY
+            INTO THE POLICY: 
+              app.UseCsp(opt => opt
+                .BlockAllMixedContent()
+                .StyleSources(s => s.Self()
+                    .CustomSources("https://fonts.googleapis.com", "sha256-DpOoqibK/BsYhobWHnU38Pyzt5SjDZuR/mFsAiVN7kk=")
+                    ...
   /************************************************************************************/
   /************************************************************************************/
   

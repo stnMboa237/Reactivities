@@ -135,15 +135,15 @@ namespace API.Controllers
                 .Include(p => p.Photos)
                 .FirstOrDefaultAsync(x => x.Email == loginDto.Email);
             
-            //for test purpose
-            if(user.UserName == "bob") {
-                user.EmailConfirmed = true;
-            }
-                
             if (user == null)
             {
                 return Unauthorized("Invalid Email");
             }
+            
+            // //for test purpose
+            // if(user.UserName == "bob") {
+            //     user.EmailConfirmed = true;
+            // }
 
             if(!user.EmailConfirmed) {
                 return Unauthorized("Email not confirmed");

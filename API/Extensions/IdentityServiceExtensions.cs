@@ -4,6 +4,7 @@ using Domain;
 using Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using Persistence;
 
@@ -16,11 +17,15 @@ namespace API.Extensions
 
             /*here we are setting up the complexeness of a password from opt.Password.<option name>*/
             services.AddIdentityCore<AppUser>(opt =>
-            {
-                opt.Password.RequireDigit = true;
-                opt.Password.RequireNonAlphanumeric = false;
-                opt.User.RequireUniqueEmail = true;
-            }).AddEntityFrameworkStores<DataContext>();
+                {
+                    opt.Password.RequireDigit = true;
+                    opt.Password.RequireNonAlphanumeric = false;
+                    opt.User.RequireUniqueEmail = true;
+                    opt.SignIn.RequireConfirmedEmail = true;
+                }
+            ).AddEntityFrameworkStores<DataContext>()
+            .AddSignInManager<SignInManager<AppUser>>()
+            .AddDefaultTokenProviders();
 
             /*Set the JWT Token*/
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["TokenKey"]));
